@@ -14,6 +14,7 @@ import com.example.proyecto.screens.MapScreen
 import com.example.proyecto.screens.MessagesScreen
 import com.example.proyecto.screens.MissionsScreen
 import com.example.proyecto.screens.ShopScreen
+import com.example.proyecto.screens.TeamScreen
 enum class AppScreens {
     HomeScreen,
     AccountScreen,
@@ -22,7 +23,9 @@ enum class AppScreens {
     MessagesScreen,
     ChatScreen,
     ShopScreen,
-    MapScreen
+    MapScreen,
+
+    TeamScreen
 }
 
 @Composable
@@ -56,6 +59,9 @@ fun Navigation() {
         }
         composable(route = AppScreens.MapScreen.name){
             MapScreen(navController)
+        }
+        composable(route = AppScreens.TeamScreen.name){
+            TeamScreen(navController)
         }
     }
 }
