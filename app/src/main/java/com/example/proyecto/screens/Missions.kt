@@ -2,6 +2,7 @@ package com.example.proyecto.screens
 
 import android.R.attr.onClick
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -11,12 +12,18 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Whatshot
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -24,13 +31,16 @@ import androidx.compose.material3.TopAppBarColors
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.example.proyecto.Components.CustomBottomBar
 import com.example.proyecto.Navigation.AppScreens
 import com.example.proyecto.R
@@ -48,11 +58,20 @@ fun MissionsScreen(navController: NavController){
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding),
+                .padding(padding)
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            Color(0xFF79BAEC),
+                            Color.White
+                        )
+                    )
+                )
+                .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-
+            Spacer(modifier = Modifier.height(24.dp))
             ElevatedCardForMissions()
 
         }  }
@@ -64,12 +83,11 @@ fun MissionsScreen(navController: NavController){
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MissionsTopBar() {
-    TopAppBar(
+    CenterAlignedTopAppBar(
+        title = {Text("Misiones", fontWeight = FontWeight.Bold)},
+        colors = TopAppBarColors(Color(0xFF5db3f5), Color(0xFF5db3f5), Color(0xFF5db3f5), Color.White, Color(0xFF5db3f5)),
+    )
 
-        title = {Text("Misiones")},
-        colors = TopAppBarColors(Color.Blue, Color.Blue, Color.Blue, Color.White, Color.Blue),
-
-        )
 
 
 }
@@ -146,21 +164,40 @@ fun ElevatedCardForMissions() {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp)
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
                 text = "Racha Diaria",
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(vertical = 8.dp)
+                modifier = Modifier.fillMaxWidth()
             )
-
+            Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = "Inicia sesión cada día para obtener mas recompensas.",
                 fontSize = 14.sp,
-                color = Color.Gray
+                color = Color.Gray,
+                modifier = Modifier.fillMaxWidth()
 
             )
+            Row(
+                modifier = Modifier.fillMaxWidth()
+                    .padding(vertical = 20.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                val blue = Color(0xFF90CAF9)
+                val red = Color.Red
+                val gray = Color(0xFFE0E0E0)
+                FireIcon(color = blue)
+                FireIcon(color = blue)
+                FireIcon(color = blue)
+                FireIcon(color = red)
+                FireIcon(color = gray)
+                FireIcon(color = gray)
+                FireIcon(color = gray)
+
+            }
 
             ElevatedButton(
                 onClick = { },
@@ -221,4 +258,21 @@ fun MissionSubCard(
             }
         }
     }
+}
+
+@Composable
+fun FireIcon(color: Color){
+    Icon(
+        imageVector = Icons.Default.Whatshot,
+        contentDescription = "Fire Icon",
+        tint = color,
+        modifier = Modifier.size(45.dp)
+    )
+}
+
+@Preview
+@Composable
+fun MissionsPreview(){
+    val navController = rememberNavController()
+    MissionsScreen(navController)
 }
