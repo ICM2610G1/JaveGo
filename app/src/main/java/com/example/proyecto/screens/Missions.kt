@@ -101,12 +101,9 @@ fun MissionsScreen(navController: NavController){
 @Composable
 fun MissionsTopBar() {
     CenterAlignedTopAppBar(
-        title = {Text("Misiones", fontWeight = FontWeight.Bold)},
+        title = {Text("Misiones", fontWeight = FontWeight.Bold, fontSize = 24.sp)},
         colors = TopAppBarColors(Color(0xFF5db3f5), Color(0xFF5db3f5), Color(0xFF5db3f5), Color.White, Color(0xFF5db3f5)),
     )
-
-
-
 }
 
 @Composable

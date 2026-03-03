@@ -19,6 +19,7 @@ import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -33,15 +34,18 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.example.proyecto.Components.CustomBottomBar
 import com.example.proyecto.Navigation.AppScreens
 import com.example.proyecto.R
@@ -59,7 +63,15 @@ fun AccountScreen(navController: NavController) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding),
+                .padding(padding)
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            Color(0xFF79BAEC),
+                            Color.White
+                        )
+                    )
+                ),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -112,14 +124,10 @@ fun AccountScreen(navController: NavController) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AccountTopBar() {
-    TopAppBar(
-
-            title = {Text("Mi cuenta")},
-            colors = TopAppBarColors(Color.Blue, Color.Blue, Color.Blue, Color.White, Color.Blue),
-
-        )
-
-
+    CenterAlignedTopAppBar(
+            title = {Text("Mi cuenta", fontWeight = FontWeight.Bold, fontSize = 25.sp)},
+            colors = TopAppBarColors(Color(0xFF5db3f5), Color(0xFF5db3f5), Color(0xFF5db3f5), Color.White, Color(0xFF5db3f5)),
+    )
 }
 
 @Composable
@@ -173,4 +181,11 @@ fun AccountButtons(modifier: Modifier, navController : NavController) {
             )
         )
     }
+}
+
+@Preview
+@Composable
+fun AccountPreview(){
+    val navController = rememberNavController()
+    AccountScreen(navController)
 }

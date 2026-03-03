@@ -40,7 +40,10 @@ import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.compose.rememberNavController
 import com.example.proyecto.Components.Pokemon
 import com.example.proyecto.Components.pokemonList
 import com.example.proyecto.Navigation.AppScreens
@@ -58,7 +61,15 @@ fun CollectionScreen(navController: NavController) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues),
+                .padding(paddingValues)
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            Color(0xFF79BAEC),
+                            Color.White
+                        )
+                    )
+                ),
             horizontalAlignment = Alignment.Start,
             verticalArrangement = Arrangement.Top
         ) {
@@ -90,14 +101,12 @@ fun CollectionScreen(navController: NavController) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CollectionTopBar() {
-    TopAppBar(
+    CenterAlignedTopAppBar(
 
-        title = {Text("Colección")},
-        colors = TopAppBarColors(Color.Blue, Color.Blue, Color.Blue, Color.White, Color.Blue),
-        modifier = Modifier.padding(all = 0.dp)
+        title = {Text("Colección", fontWeight = FontWeight.Bold, fontSize = 24.sp)},
+        colors = TopAppBarColors(Color(0xFF5db3f5), Color(0xFF5db3f5), Color(0xFF5db3f5), Color.White, Color(0xFF5db3f5)),
+
         )
-
-
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -165,5 +174,10 @@ fun PokemonCard(pokemon: Pokemon){
         }
     }
 }
-
+@Preview
+@Composable
+fun CollectionPreview(){
+    val navController = rememberNavController()
+    CollectionScreen(navController)
+}
 
