@@ -2,6 +2,7 @@ package com.example.proyecto.screens
 
 import android.R.attr.padding
 import android.text.Layout
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -35,6 +36,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import com.example.proyecto.R
 import com.example.proyecto.Navigation.AppScreens
 
 
@@ -73,7 +77,15 @@ fun TeamScreen(navController: NavController) {
                 shape = RoundedCornerShape(24.dp),
                 colors = CardDefaults.cardColors(containerColor = Color.White),
                 elevation = CardDefaults.elevatedCardElevation(defaultElevation = 8.dp)
-            ) {}
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.bulbasaur),
+                    contentDescription = "Bulbasaur",
+                    modifier = Modifier.fillMaxSize().padding(10.dp),
+                    contentScale = ContentScale.Fit
+                )
+
+            }
 
 
             ElevatedCard(
@@ -87,7 +99,14 @@ fun TeamScreen(navController: NavController) {
                 shape = RoundedCornerShape(24.dp),
                 colors = CardDefaults.cardColors(containerColor = Color.White),
                 elevation = CardDefaults.elevatedCardElevation(defaultElevation = 8.dp)
-            ) {}
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.charmander),
+                    contentDescription = "Charmander",
+                    modifier = Modifier.fillMaxSize().padding(10.dp),
+                    contentScale = ContentScale.Fit
+                )
+            }
 
 
             ElevatedCard(
@@ -101,7 +120,14 @@ fun TeamScreen(navController: NavController) {
                 shape = RoundedCornerShape(24.dp),
                 colors = CardDefaults.cardColors(containerColor = Color.White),
                 elevation = CardDefaults.elevatedCardElevation(defaultElevation = 8.dp)
-            ) {}
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.squirtle),
+                    contentDescription = "Squirtle",
+                    modifier = Modifier.fillMaxSize().padding(10.dp),
+                    contentScale = ContentScale.Fit
+                )
+            }
         }
     }
 }
