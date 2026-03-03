@@ -6,5 +6,5 @@ import androidx.navigation.NavController
 @Composable
 
 fun ChatScreen(navController: NavController){
-
+      Text("CHAT")
 }
