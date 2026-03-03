@@ -1,18 +1,24 @@
 package com.example.proyecto.screens
 
 import android.R.attr.onClick
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Whatshot
@@ -24,21 +30,26 @@ import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarColors
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.modifier.modifierLocalOf
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.pm.ShortcutInfoCompat
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.proyecto.Components.CustomBottomBar
@@ -49,6 +60,8 @@ import com.example.proyecto.R
 
 fun MissionsScreen(navController: NavController){
 
+    //Se crea un estado para poder hacer scroll y que no se pierda información
+    val scrollState = rememberScrollState()
     Scaffold(
         topBar = { MissionsTopBar() },
         bottomBar = {
@@ -59,6 +72,7 @@ fun MissionsScreen(navController: NavController){
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
+                //Realización de difuminado, desde el color 0xFF79BAEC (azul) hasta blanco
                 .background(
                     brush = Brush.verticalGradient(
                         colors = listOf(
@@ -67,11 +81,14 @@ fun MissionsScreen(navController: NavController){
                         )
                     )
                 )
-                .verticalScroll(rememberScrollState()),
+                //Se utiliza para no perder información debajo de la bottom bar
+                //Permitiendo hacer scroll
+                .verticalScroll(scrollState),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(24.dp))
+            InfoSection()
+            Spacer(modifier = Modifier.height(2.dp))
             ElevatedCardForMissions()
 
         }  }
@@ -149,10 +166,6 @@ fun ElevatedCardForMissions() {
         }
         Spacer(modifier = Modifier.height(10.dp))
     }
-
-
-
-
     ElevatedCard(
         elevation = CardDefaults.cardElevation(
             defaultElevation = 6.dp
@@ -268,6 +281,69 @@ fun FireIcon(color: Color){
         tint = color,
         modifier = Modifier.size(45.dp)
     )
+}
+
+@Composable
+fun InfoSection(){
+    Row(
+        modifier = Modifier.fillMaxWidth()
+            .padding(horizontal = 24.dp, vertical = 20.dp),
+        verticalAlignment = Alignment.CenterVertically
+        ) {
+        //Surface para hacer un marco que rodee el icono del personaje
+        Surface(
+            modifier = Modifier.size(140.dp),
+            shape = CircleShape,
+            color = Color.White,
+            //Borde del marco color blanco
+            border = BorderStroke(4.dp, Color.White),
+            shadowElevation = 4.dp
+        ) {
+            Image(
+                //Imagen del perfil
+                painter = painterResource(R.drawable.profile2),
+                contentDescription = "Profile picture",
+                modifier = Modifier.fillMaxSize()
+
+            )
+        }
+        Spacer(modifier = Modifier.width(16.dp))
+        //Nivel y barra de progreso
+        Column(modifier = Modifier.weight(1f)) {
+            //Texto que muestra el nivel
+            Text(
+                text = "Nivel 12",
+                fontSize = 22.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF455A64)
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            //Se crea un Box para la barra opaca, es decir la más larga
+            Box(
+                modifier = Modifier.fillMaxWidth()
+                    .height(12.dp)
+                    // clip crea una forma redondeada, primero va clip que background
+                    .clip(RoundedCornerShape(6.dp))
+                    //color de la barra de progreso con menor intensidad
+                    .background(Color(0xFF9EA8C7).copy(alpha = 0.5f))
+            ){
+                //Se crea otro Box encima del Box original pero con un menor tamaño y con otro
+                //Color, el cual representa el progreso
+                Box(
+                    modifier = Modifier.fillMaxWidth(0.65f)
+                        .fillMaxHeight()
+                        .background(Color(0xFF5C88C2))
+                )
+            }
+            //Texto que muestra cuanta XP tiene
+            Text(
+                text = "1640/2000",
+                fontSize = 12.sp,
+                color = Color.Gray,
+                modifier = Modifier.align(Alignment.End).padding(top = 4.dp)
+            )
+        }
+    }
 }
 
 @Preview
