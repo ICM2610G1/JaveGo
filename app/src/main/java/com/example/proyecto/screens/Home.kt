@@ -57,9 +57,8 @@ fun HomeScreen(navController: NavController){
 
         ){padding ->
 
-        Box(modifier = Modifier.fillMaxSize().padding(padding)){
 
-        Column(modifier = Modifier.fillMaxSize().padding(top = 50.dp),
+        Column(modifier = Modifier.fillMaxSize().padding(padding).padding(top = 50.dp),
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally) {
 
@@ -104,20 +103,16 @@ fun HomeScreen(navController: NavController){
                 Text("Registrarse")
             }
 
-            }
-
             Image(
                 painter = painterResource(id = R.drawable.perfilhome),
                 contentDescription = "Entrenadores",
                 modifier = Modifier
                     .size(360.dp)
-                    .align(Alignment.BottomCenter),
+                    .padding(top = 8.dp),
                 contentScale = ContentScale.Fit
             )
-
         }
     }
-
 }
 
 
