@@ -35,7 +35,7 @@ import com.example.proyecto.R
 @Composable
 fun CustomBottomBar(navController: NavController) {
     BottomAppBar(
-        containerColor = Color.Blue
+        containerColor = Color(0xFF5db3f5)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),

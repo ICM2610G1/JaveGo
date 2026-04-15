@@ -31,6 +31,7 @@ import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.text.input.setTextAndSelectAll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.OutlinedTextField
@@ -38,9 +39,12 @@ import androidx.compose.material3.Text
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import com.example.proyecto.R
 import androidx.compose.ui.unit.sp
+import androidx.navigation.compose.rememberNavController
 import com.example.proyecto.Components.TwoButtonBullet
 import com.example.proyecto.Navigation.AppScreens
 
@@ -53,9 +57,8 @@ fun HomeScreen(navController: NavController){
 
         ){padding ->
 
-        Box(modifier = Modifier.fillMaxSize().padding(padding)){
 
-        Column(modifier = Modifier.fillMaxSize().padding(top = 50.dp),
+        Column(modifier = Modifier.fillMaxSize().padding(padding).padding(top = 50.dp),
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally) {
 
@@ -100,20 +103,16 @@ fun HomeScreen(navController: NavController){
                 Text("Registrarse")
             }
 
-            }
-
             Image(
                 painter = painterResource(id = R.drawable.perfilhome),
                 contentDescription = "Entrenadores",
                 modifier = Modifier
                     .size(360.dp)
-                    .align(Alignment.BottomCenter),
+                    .padding(top = 8.dp),
                 contentScale = ContentScale.Fit
             )
-
         }
     }
-
 }
 
 
@@ -121,10 +120,16 @@ fun HomeScreen(navController: NavController){
 @Composable
 
 fun MyTopBar(){
-    TopAppBar(
-        title = {Text("Jave Go")},
-        colors = TopAppBarColors(Color.Blue, Color.Blue, Color.Blue, Color.White, Color.Blue)
+    CenterAlignedTopAppBar(
+        title = {Text("Jave Go", fontSize = 25.sp, fontWeight = FontWeight.Bold)},
+        colors = TopAppBarColors(Color(0xFF5db3f5), Color(0xFF5db3f5), Color(0xFF5db3f5), Color.White, Color(0xFF5db3f5))
     )
+}
 
+@Preview
+@Composable
+fun HomePreview(){
+    val navController = rememberNavController()
+    HomeScreen(navController)
 }
 
