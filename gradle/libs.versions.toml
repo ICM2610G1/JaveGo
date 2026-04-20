@@ -11,16 +11,17 @@ composeBom = "2024.09.00"
 material3 = "1.4.0"
 foundation = "1.10.3"
 foundationVersion = "1.10.6"
-firebaseAuthKtx = "22.3.1"
 googleServices = "4.4.2"
+firebaseAuthKtx = "22.3.1"
 
 fragmentKtx = "1.8.9"
 firebaseAuth = "24.0.1"
 credentials = "1.6.0"
 credentialsPlayServicesAuth = "1.6.0"
 googleid = "1.2.0"
-firebaseDatabaseKtx = "22.0.1"
-firebaseDatabase = "22.0.1"
+firebaseDatabaseKtx = "20.3.1"
+firebaseDatabase = "20.3.1"
+
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
