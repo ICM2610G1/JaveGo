@@ -33,6 +33,7 @@ import coil.compose.rememberAsyncImagePainter
 import com.example.proyecto.Components.CustomBottomBar
 import com.example.proyecto.Navigation.AppScreens
 import com.example.proyecto.R
+import com.example.proyecto.auth
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
@@ -136,7 +137,7 @@ fun AccountScreen(navController: NavController) {
 
 
             Text(
-                text = "Nombre",
+                text = auth.currentUser?.displayName ?: "Usuario",
                 fontSize = 30.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.Black,
@@ -167,7 +168,7 @@ fun AccountScreen(navController: NavController) {
 
 
             Button(
-                onClick = { navController.navigate(AppScreens.HomeScreen.name) },
+                onClick = { navController.navigate(AppScreens.LoginScreen.name) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 30.dp, vertical = 15.dp),
@@ -238,7 +239,7 @@ fun AccountButtons(modifier: Modifier, navController: NavController) {
                     color = Color.Red
                 )
             },
-            onClick = { navController.navigate(route = AppScreens.HomeScreen.name) },
+            onClick = { navController.navigate(route = AppScreens.LoginScreen.name) },
             shape = RectangleShape,
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color.Transparent

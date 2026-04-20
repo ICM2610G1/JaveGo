@@ -14,11 +14,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.fragment.app.FragmentActivity
 import com.example.proyecto.ui.theme.ProyectoTheme
 import com.example.proyecto.Navigation.Navigation
+import com.google.firebase.auth.FirebaseAuth
 
-
+lateinit var auth: FirebaseAuth
 class MainActivity : FragmentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+      auth = FirebaseAuth.getInstance()
         enableEdgeToEdge()
         setContent {
 

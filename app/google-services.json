@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "666076860135",
+    "project_id": "javego-5235f",
+    "storage_bucket": "javego-5235f.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:666076860135:android:6d1c524fb31b5c1c8a5c42",
+        "android_client_info": {
+          "package_name": "com.example.proyecto"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAAkqEEA8eqO8RFUXy1yhpfaTFN2ziGRNs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
