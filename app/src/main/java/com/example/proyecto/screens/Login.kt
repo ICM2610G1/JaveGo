@@ -46,7 +46,7 @@ fun LoginScreen(navController: NavController, model: AuthViewModel = viewModel()
             object : BiometricPrompt.AuthenticationCallback() {
                 override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
                     super.onAuthenticationSucceeded(result)
-                    navController.navigate(AppScreens.AccountScreen.name)
+                    navController.navigate(AppScreens.TeamScreen.name)
                 }
 
                 override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
