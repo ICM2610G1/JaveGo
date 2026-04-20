@@ -6,15 +6,37 @@ import android.provider.ContactsContract
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -26,8 +48,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.proyecto.Components.CustomBottomBar
-import com.google.accompanist.permissions.*
 import com.example.proyecto.R
+import com.example.proyecto.auth
+import com.example.proyecto.database
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberPermissionState
 
 
 data class Contact(val id: String, val name: String, val phone: String)
@@ -63,15 +89,44 @@ fun loadContacts(contentResolver: ContentResolver): List<Contact> {
 
 @Composable
 fun MessagesScreen(navController: NavController) {
-    val chatList = remember { mutableStateListOf<ChatEntry>() }
+    val uid = auth.currentUser?.uid
+    var chatList by remember { mutableStateOf<List<ChatEntry>>(emptyList()) }
     var isAddingContact by remember { mutableStateOf(false) }
+
+
+    LaunchedEffect(uid) {
+        if (uid != null) {
+            database.getReference("users/$uid/chats")
+                .get()
+                .addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        val lista = mutableListOf<ChatEntry>()
+                        task.result.children.forEach { snap ->
+                            val titulo = snap.child("titulo").value as? String ?: ""
+                            val desc = snap.child("descripcion").value as? String ?: ""
+                            lista.add(ChatEntry(titulo, desc))
+                        }
+                        chatList = lista
+                    }
+                }
+        }
+    }
 
     if (isAddingContact) {
         ContactsSelectionScreen(
             onContactSelected = { contact ->
 
                 if (chatList.none { it.title == contact.name }) {
-                    chatList.add(ChatEntry(contact.name, "¡Nuevo chat iniciado!", "male"))
+                    if (uid != null) {
+                        val ref = database.getReference("users/$uid/chats")
+                        val id = ref.push().key ?: return@ContactsSelectionScreen
+                        ref.child(id).setValue(mapOf(
+                            "titulo" to contact.name,
+                            "descripcion" to "¡Nuevo chat iniciado!"
+                        ))
+                        // Actualizar lista local
+                        chatList = chatList + ChatEntry(contact.name, "¡Nuevo chat iniciado!")
+                    }
                 }
                 isAddingContact = false
             },

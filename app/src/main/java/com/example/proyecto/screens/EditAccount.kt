@@ -1,6 +1,7 @@
 package com.example.proyecto.screens
 
 import android.net.Uri
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -12,7 +13,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material3.*
@@ -27,6 +27,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -39,15 +40,12 @@ import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import java.io.File
 import java.util.UUID
-import androidx.compose.runtime.LaunchedEffect
 import com.example.proyecto.auth
 import com.example.proyecto.database
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.UserProfileChangeRequest
-import com.google.firebase.database.DataSnapshot
+import com.google.firebase.storage.FirebaseStorage
+
 @OptIn(ExperimentalPermissionsApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun EditProfileScreen(navController: NavController) {
@@ -57,6 +55,18 @@ fun EditProfileScreen(navController: NavController) {
     var nombre by remember { mutableStateOf("") }
     var correo by remember { mutableStateOf("") }
     var celular by remember { mutableStateOf("") }
+    var equipo by remember { mutableStateOf("") }
+
+    var imageUri by remember { mutableStateOf<Uri?>(null) }
+    var savedPhotoUrl by remember { mutableStateOf("") }
+    var newImageUri by remember { mutableStateOf<Uri?>(null) }
+    var showOptions by remember { mutableStateOf(false) }
+    var isSaving by remember { mutableStateOf(false) }
+
+
+    var showReauthDialog by remember { mutableStateOf(false) }
+    var passwordReauth by remember { mutableStateOf("") }
+    var reauthError by remember { mutableStateOf("") }
 
     LaunchedEffect(uid) {
         if (uid != null) {
@@ -68,14 +78,13 @@ fun EditProfileScreen(navController: NavController) {
                         nombre = snapshot.child("nombre").value as? String ?: ""
                         correo = snapshot.child("correo").value as? String ?: ""
                         celular = snapshot.child("celular").value as? String ?: ""
+                        equipo = snapshot.child("equipo").value as? String ?: ""
+                        val saved = snapshot.child("photoUrl").value as? String ?: ""
+                        if (saved.isNotEmpty()) savedPhotoUrl = saved
                     }
                 }
         }
     }
-
-    var imageUri by remember { mutableStateOf<Uri?>(null) }
-    var newImageUri by remember { mutableStateOf<Uri?>(null) }
-    var showOptions by remember { mutableStateOf(false) }
 
     val cameraPermissionState = rememberPermissionState(android.Manifest.permission.CAMERA)
 
@@ -94,6 +103,70 @@ fun EditProfileScreen(navController: NavController) {
         cameraLauncher.launch(uri)
     }
 
+    val equipoInfo = when (equipo) {
+        "Bulbasaur" -> Pair(R.drawable.bulbasaur, "Bulbasaur")
+        "Charmander" -> Pair(R.drawable.charmander, "Charmander")
+        "Squirtle" -> Pair(R.drawable.squirtle, "Squirtle")
+        else -> Pair(R.drawable.charmander, equipo.ifEmpty { "Sin equipo" })
+    }
+
+
+    fun guardarEnDB(photoUrl: String) {
+        if (uid == null) return
+        database.getReference("users/$uid")
+            .updateChildren(
+                mapOf(
+                    "nombre" to nombre,
+                    "correo" to correo.trim(),
+                    "celular" to celular,
+                    "photoUrl" to photoUrl
+                )
+            )
+            .addOnSuccessListener {
+                val profileUpdates = UserProfileChangeRequest.Builder()
+                    .setDisplayName(nombre).build()
+                auth.currentUser?.updateProfile(profileUpdates)
+                isSaving = false
+                navController.popBackStack()
+            }
+            .addOnFailureListener {
+                isSaving = false
+                Toast.makeText(context, "Error al guardar datos", Toast.LENGTH_SHORT).show()
+            }
+    }
+
+
+    fun subirFotoYGuardar() {
+        if (imageUri != null) {
+            val storageRef = FirebaseStorage.getInstance()
+                .reference.child("avatars/$uid.jpg")
+            storageRef.putFile(imageUri!!)
+                .addOnSuccessListener {
+                    storageRef.downloadUrl.addOnSuccessListener { downloadUri ->
+                        guardarEnDB(downloadUri.toString())
+                    }
+                }
+                .addOnFailureListener {
+                    guardarEnDB(savedPhotoUrl)
+                }
+        } else {
+            guardarEnDB(savedPhotoUrl)
+        }
+    }
+
+
+    fun actualizarCorreoYGuardar() {
+        auth.currentUser?.updateEmail(correo.trim())
+            ?.addOnSuccessListener {
+                subirFotoYGuardar()
+            }
+            ?.addOnFailureListener { e ->
+                isSaving = false
+                Toast.makeText(context, "Error al cambiar correo: ${e.message}", Toast.LENGTH_LONG).show()
+            }
+    }
+
+
     if (showOptions) {
         AlertDialog(
             onDismissRequest = { showOptions = false },
@@ -107,13 +180,79 @@ fun EditProfileScreen(navController: NavController) {
             },
             dismissButton = {
                 TextButton(onClick = {
-                    if (cameraPermissionState.status.isGranted) {
-                        openCamera()
-                    } else {
-                        cameraPermissionState.launchPermissionRequest()
-                    }
+                    if (cameraPermissionState.status.isGranted) openCamera()
+                    else cameraPermissionState.launchPermissionRequest()
                     showOptions = false
                 }) { Text("Cámara") }
+            }
+        )
+    }
+
+
+    if (showReauthDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                showReauthDialog = false
+                passwordReauth = ""
+                reauthError = ""
+            },
+            title = { Text("Confirma tu identidad") },
+            text = {
+                Column {
+                    Text(
+                        "Para cambiar el correo ingresa tu contraseña actual:",
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                    OutlinedTextField(
+                        value = passwordReauth,
+                        onValueChange = {
+                            passwordReauth = it
+                            reauthError = ""
+                        },
+                        placeholder = { Text("Contraseña") },
+                        visualTransformation = PasswordVisualTransformation(),
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    if (reauthError.isNotEmpty()) {
+                        Text(
+                            reauthError,
+                            color = Color.Red,
+                            fontSize = 12.sp,
+                            modifier = Modifier.padding(top = 4.dp)
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    val user = auth.currentUser
+                    val emailActual = user?.email ?: ""
+                    val credential = EmailAuthProvider.getCredential(emailActual, passwordReauth)
+
+                    user?.reauthenticate(credential)
+                        ?.addOnSuccessListener {
+                            showReauthDialog = false
+                            passwordReauth = ""
+                            reauthError = ""
+                            isSaving = true
+                            actualizarCorreoYGuardar()
+                        }
+                        ?.addOnFailureListener {
+                            reauthError = "Contraseña incorrecta, intenta de nuevo"
+                        }
+                }) {
+                    Text("Confirmar")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    showReauthDialog = false
+                    passwordReauth = ""
+                    reauthError = ""
+                }) {
+                    Text("Cancelar")
+                }
             }
         )
     }
@@ -140,6 +279,7 @@ fun EditProfileScreen(navController: NavController) {
         ) {
             Spacer(modifier = Modifier.height(20.dp))
 
+
             Box(
                 modifier = Modifier
                     .size(180.dp)
@@ -149,18 +289,50 @@ fun EditProfileScreen(navController: NavController) {
                 contentAlignment = Alignment.Center
             ) {
                 Image(
-                    painter = if (imageUri != null) rememberAsyncImagePainter(imageUri) else painterResource(id = R.drawable.avatar1),
+                    painter = when {
+                        imageUri != null -> rememberAsyncImagePainter(imageUri)
+                        savedPhotoUrl.isNotEmpty() -> rememberAsyncImagePainter(savedPhotoUrl)
+                        else -> painterResource(id = R.drawable.avatar1)
+                    },
                     contentDescription = null,
-                    modifier = Modifier.fillMaxSize().padding(5.dp).clip(CircleShape),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(5.dp)
+                        .clip(CircleShape),
                     contentScale = ContentScale.Crop
                 )
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(8.dp)
+                        .background(Color(0xFF2196F3), shape = CircleShape)
+                        .padding(6.dp)
+                ) {
+                    Icon(
+                        Icons.Default.Edit,
+                        contentDescription = "Cambiar foto",
+                        tint = Color.White,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
             }
+
+            Text(
+                text = "Toca la foto para cambiarla",
+                fontSize = 12.sp,
+                color = Color.Gray,
+                modifier = Modifier.padding(top = 6.dp, bottom = 4.dp)
+            )
 
             OutlinedTextField(
                 value = nombre,
                 onValueChange = { nombre = it },
                 trailingIcon = { Icon(Icons.Default.Edit, contentDescription = null) },
-                textStyle = LocalTextStyle.current.copy(textAlign = TextAlign.Center, fontSize = 24.sp, fontWeight = FontWeight.Bold),
+                textStyle = LocalTextStyle.current.copy(
+                    textAlign = TextAlign.Center,
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold
+                ),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = Color.Transparent,
                     unfocusedBorderColor = Color.Transparent,
@@ -170,10 +342,17 @@ fun EditProfileScreen(navController: NavController) {
                 modifier = Modifier.padding(top = 10.dp)
             )
 
-            Text("Nivel 12 • ⭐ 340", fontSize = 16.sp, color = Color.Gray, modifier = Modifier.padding(bottom = 20.dp))
+            Text(
+                "Nivel 12 • ⭐ 340",
+                fontSize = 16.sp,
+                color = Color.Gray,
+                modifier = Modifier.padding(bottom = 20.dp)
+            )
 
             Card(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp),
                 shape = RoundedCornerShape(20.dp),
                 colors = CardDefaults.cardColors(containerColor = Color.White)
             ) {
@@ -182,6 +361,7 @@ fun EditProfileScreen(navController: NavController) {
                     Divider(modifier = Modifier.padding(vertical = 8.dp), thickness = 0.5.dp)
                     EditableInfoRow("Celular", celular) { celular = it }
                     Divider(modifier = Modifier.padding(vertical = 8.dp), thickness = 0.5.dp)
+
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
@@ -189,10 +369,18 @@ fun EditProfileScreen(navController: NavController) {
                     ) {
                         Text("Equipo", color = Color.Gray)
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text("Rojo", color = Color.Black)
+                            Text(equipoInfo.second, color = Color.Black)
                             Spacer(modifier = Modifier.width(8.dp))
-                            Image(painter = painterResource(id = R.drawable.charmander), contentDescription = null, modifier = Modifier.size(30.dp))
-                            Icon(Icons.Default.KeyboardArrowRight, contentDescription = null, tint = Color.LightGray)
+                            Image(
+                                painter = painterResource(id = equipoInfo.first),
+                                contentDescription = null,
+                                modifier = Modifier.size(30.dp)
+                            )
+                            Icon(
+                                Icons.Default.KeyboardArrowRight,
+                                contentDescription = null,
+                                tint = Color.LightGray
+                            )
                         }
                     }
                 }
@@ -201,44 +389,39 @@ fun EditProfileScreen(navController: NavController) {
             Spacer(modifier = Modifier.weight(1f))
 
             Button(
+                enabled = !isSaving,
                 onClick = {
-                    if (uid != null) {
-                        database.getReference("users/$uid")
-                            .updateChildren(mapOf(
-                                "nombre" to nombre,
-                                "correo" to correo,
-                                "celular" to celular
-                            ))
-                            .addOnSuccessListener {
-                                val profileUpdates = UserProfileChangeRequest.Builder()
-                                    .setDisplayName(nombre).build()
-                                auth.currentUser?.updateProfile(profileUpdates)
-                                navController.popBackStack()
-                            }
+                    if (uid == null) return@Button
+                    val correoOriginal = auth.currentUser?.email ?: ""
+                    val correoNuevo = correo.trim()
+
+                    if (correoNuevo != correoOriginal && correoNuevo.isNotEmpty()) {
+
+                        showReauthDialog = true
+                    } else {
+
+                        isSaving = true
+                        subirFotoYGuardar()
                     }
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 30.dp, vertical = 5.dp),
+                    .padding(horizontal = 30.dp, vertical = 20.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF2196F3),
                     contentColor = Color.White
                 ),
                 shape = RoundedCornerShape(15.dp)
             ) {
-                Text("Guardar cambios", fontWeight = FontWeight.Bold)
-            }
-
-            Button(
-                onClick = { /* Acción eliminar */ },
-                modifier = Modifier.fillMaxWidth().padding(30.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = Color.Red),
-                shape = RoundedCornerShape(15.dp),
-                elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp)
-            ) {
-                Icon(Icons.Default.Delete, contentDescription = null)
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Eliminar cuenta", fontWeight = FontWeight.Bold)
+                if (isSaving) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        color = Color.White,
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Text("Guardar cambios", fontWeight = FontWeight.Bold)
+                }
             }
         }
     }
@@ -255,7 +438,11 @@ fun EditableInfoRow(label: String, value: String, onValueChange: (String) -> Uni
         BasicTextField(
             value = value,
             onValueChange = onValueChange,
-            textStyle = TextStyle(textAlign = TextAlign.End, fontSize = 16.sp, color = Color.Black),
+            textStyle = TextStyle(
+                textAlign = TextAlign.End,
+                fontSize = 16.sp,
+                color = Color.Black
+            ),
             modifier = Modifier.weight(2f)
         )
         Icon(Icons.Default.KeyboardArrowRight, contentDescription = null, tint = Color.LightGray)
