@@ -218,12 +218,14 @@ fun AccountButtons(modifier: Modifier, navController: NavController) {
                 )
             },
             modifier = Modifier.weight(1f),
-            onClick = { /* Acción editar */ },
+
+            onClick = { navController.navigate(AppScreens.EditProfileScreen.name) },
             shape = RectangleShape,
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color.Transparent
             )
         )
+
         VerticalDivider(
             modifier = Modifier.height(35.dp),
             color = Color.Gray
