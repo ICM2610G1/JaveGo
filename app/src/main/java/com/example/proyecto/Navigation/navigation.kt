@@ -9,14 +9,18 @@ import androidx.navigation.compose.rememberNavController
 import com.example.proyecto.screens.AccountScreen
 import com.example.proyecto.screens.ChatScreen
 import com.example.proyecto.screens.CollectionScreen
-import com.example.proyecto.screens.HomeScreen
+import com.example.proyecto.screens.LoginScreen
+import com.example.proyecto.screens.RegisterScreen
+import com.example.proyecto.screens.EditProfileScreen
 import com.example.proyecto.screens.MapScreen
 import com.example.proyecto.screens.MessagesScreen
 import com.example.proyecto.screens.MissionsScreen
 import com.example.proyecto.screens.ShopScreen
 import com.example.proyecto.screens.TeamScreen
 enum class AppScreens {
-    HomeScreen,
+    LoginScreen,
+
+    RegisterScreen,
     AccountScreen,
     CollectionScreen,
     MissionsScreen,
@@ -25,7 +29,9 @@ enum class AppScreens {
     ShopScreen,
     MapScreen,
 
-    TeamScreen
+    TeamScreen,
+
+    EditProfileScreen
 }
 
 @Composable
@@ -34,10 +40,13 @@ fun Navigation() {
 
     NavHost(
         navController = navController,
-        startDestination = AppScreens.HomeScreen.name
+        startDestination = AppScreens.LoginScreen.name
     ) {
-        composable(route = AppScreens.HomeScreen.name) {
-            HomeScreen(navController)
+        composable(route = AppScreens.LoginScreen.name) {
+            LoginScreen(navController)
+        }
+        composable(route = AppScreens.RegisterScreen.name) {
+            RegisterScreen(navController)
         }
         composable(route = AppScreens.AccountScreen.name) {
             AccountScreen(navController)
@@ -62,6 +71,9 @@ fun Navigation() {
         }
         composable(route = AppScreens.TeamScreen.name){
             TeamScreen(navController)
+        }
+        composable(route = AppScreens.EditProfileScreen.name){
+            EditProfileScreen((navController))
         }
     }
 }

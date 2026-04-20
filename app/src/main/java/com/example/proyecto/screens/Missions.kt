@@ -60,7 +60,7 @@ import com.example.proyecto.R
 
 fun MissionsScreen(navController: NavController){
 
-    //Se crea un estado para poder hacer scroll y que no se pierda información
+
     val scrollState = rememberScrollState()
     Scaffold(
         topBar = { MissionsTopBar() },
@@ -72,7 +72,7 @@ fun MissionsScreen(navController: NavController){
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                //Realización de difuminado, desde el color 0xFF79BAEC (azul) hasta blanco
+
                 .background(
                     brush = Brush.verticalGradient(
                         colors = listOf(
@@ -81,8 +81,7 @@ fun MissionsScreen(navController: NavController){
                         )
                     )
                 )
-                //Se utiliza para no perder información debajo de la bottom bar
-                //Permitiendo hacer scroll
+
                 .verticalScroll(scrollState),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
@@ -287,17 +286,17 @@ fun InfoSection(){
             .padding(horizontal = 24.dp, vertical = 20.dp),
         verticalAlignment = Alignment.CenterVertically
         ) {
-        //Surface para hacer un marco que rodee el icono del personaje
+
         Surface(
             modifier = Modifier.size(140.dp),
             shape = CircleShape,
             color = Color.White,
-            //Borde del marco color blanco
+
             border = BorderStroke(4.dp, Color.White),
             shadowElevation = 4.dp
         ) {
             Image(
-                //Imagen del perfil
+
                 painter = painterResource(R.drawable.profile2),
                 contentDescription = "Profile picture",
                 modifier = Modifier.fillMaxSize()
@@ -305,9 +304,9 @@ fun InfoSection(){
             )
         }
         Spacer(modifier = Modifier.width(16.dp))
-        //Nivel y barra de progreso
+
         Column(modifier = Modifier.weight(1f)) {
-            //Texto que muestra el nivel
+
             Text(
                 text = "Nivel 12",
                 fontSize = 22.sp,
@@ -315,24 +314,23 @@ fun InfoSection(){
                 color = Color(0xFF455A64)
             )
             Spacer(modifier = Modifier.height(8.dp))
-            //Se crea un Box para la barra opaca, es decir la más larga
+
             Box(
                 modifier = Modifier.fillMaxWidth()
                     .height(12.dp)
-                    // clip crea una forma redondeada, primero va clip que background
+
                     .clip(RoundedCornerShape(6.dp))
-                    //color de la barra de progreso con menor intensidad
+
                     .background(Color(0xFF9EA8C7).copy(alpha = 0.5f))
             ){
-                //Se crea otro Box encima del Box original pero con un menor tamaño y con otro
-                //Color, el cual representa el progreso
+
                 Box(
                     modifier = Modifier.fillMaxWidth(0.65f)
                         .fillMaxHeight()
                         .background(Color(0xFF5C88C2))
                 )
             }
-            //Texto que muestra cuanta XP tiene
+
             Text(
                 text = "1640/2000",
                 fontSize = 12.sp,
