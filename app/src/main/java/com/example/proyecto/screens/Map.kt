@@ -2,7 +2,6 @@ package com.example.proyecto.screens
 
 import android.Manifest
 import android.content.Context
-import android.content.pm.PackageManager
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
@@ -13,9 +12,28 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -24,23 +42,38 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.proyecto.Components.CustomBottomBar
 import com.example.proyecto.R
-import com.google.android.gms.location.*
+import com.example.proyecto.auth
+import com.example.proyecto.database
+import com.google.android.gms.location.LocationCallback
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationResult
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
 import com.google.android.gms.maps.CameraUpdateFactory
-import com.google.android.gms.maps.model.*
-import com.google.maps.android.compose.*
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
+import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.MapStyleOptions
+import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.MapProperties
+import com.google.maps.android.compose.MapUiSettings
+import com.google.maps.android.compose.Marker
+import com.google.maps.android.compose.Polyline
+import com.google.maps.android.compose.rememberCameraPositionState
+import com.google.maps.android.compose.rememberMarkerState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.Locale
-
 
 
 data class PokemonEncounter(
@@ -114,12 +147,22 @@ class MapViewModel : ViewModel() {
         _uiState.update { it.copy(isCapturing = true, captureMessage = "¡AGITA EL CELULAR!") }
     }
 
-    fun checkShake(x: Float, y: Float, z: Float) {
+    fun checkShake(x: Float, y: Float, z: Float, uid: String?) {
         val acceleration = Math.sqrt((x * x + y * y + z * z).toDouble()).toFloat()
-
 
         if (_uiState.value.isCapturing && acceleration > 45f) {
             _uiState.update { it.copy(captureMessage = "¡CAPTURADO!", isCapturing = false) }
+
+
+            val pokemon = _uiState.value.activePokemon
+            if (pokemon != null && uid != null) {
+                val ref = database.getReference("users/$uid/pokemons")
+                val id = ref.push().key ?: return
+                ref.child(id).setValue(mapOf(
+                    "nombre" to pokemon.name,
+                    "id" to pokemon.id
+                ))
+            }
         }
     }
 
@@ -190,7 +233,10 @@ fun MapScreen(navController: NavController, viewModel: MapViewModel = viewModel(
                 event?.let {
                     when (it.sensor.type) {
                         Sensor.TYPE_LIGHT -> viewModel.onLuminosityChanged(it.values[0])
-                        Sensor.TYPE_ACCELEROMETER -> viewModel.checkShake(it.values[0], it.values[1], it.values[2])
+                        Sensor.TYPE_ACCELEROMETER -> viewModel.checkShake(
+                            it.values[0], it.values[1], it.values[2],
+                            auth.currentUser?.uid
+                        )
                         Sensor.TYPE_STEP_COUNTER -> viewModel.onStepsChanged(it.values[0])
                     }
                 }

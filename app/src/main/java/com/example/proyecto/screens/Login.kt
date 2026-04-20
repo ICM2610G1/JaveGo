@@ -26,12 +26,43 @@ import com.example.proyecto.Components.AuthViewModel
 import com.example.proyecto.Navigation.AppScreens
 import com.example.proyecto.R
 import com.example.proyecto.auth
+import com.example.proyecto.database
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(navController: NavController, model: AuthViewModel = viewModel()) {
     val context = LocalContext.current
     val state by model.authState.collectAsState()
+
+    fun navigateAfterLogin() {
+        val uid = auth.currentUser?.uid
+        if (uid != null) {
+
+            database.getReference("users/$uid/equipo")
+                .get()
+                .addOnSuccessListener { snapshot ->
+                    if (snapshot.exists() && snapshot.value != null) {
+
+                        navController.navigate(AppScreens.AccountScreen.name) {
+                            popUpTo(AppScreens.LoginScreen.name) { inclusive = true }
+                        }
+                    } else {
+
+                        navController.navigate(AppScreens.TeamScreen.name) {
+                            popUpTo(AppScreens.LoginScreen.name) { inclusive = true }
+                        }
+                    }
+                }
+                .addOnFailureListener {
+
+                    navController.navigate(AppScreens.TeamScreen.name) {
+                        popUpTo(AppScreens.LoginScreen.name) { inclusive = true }
+                    }
+                }
+        } else {
+            navController.navigate(AppScreens.TeamScreen.name)
+        }
+    }
 
     fun authenticateWithBiometrics() {
         val activity = context as? FragmentActivity
@@ -46,7 +77,8 @@ fun LoginScreen(navController: NavController, model: AuthViewModel = viewModel()
             object : BiometricPrompt.AuthenticationCallback() {
                 override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
                     super.onAuthenticationSucceeded(result)
-                    navController.navigate(AppScreens.TeamScreen.name)
+
+                    navigateAfterLogin()
                 }
 
                 override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
@@ -116,24 +148,24 @@ fun LoginScreen(navController: NavController, model: AuthViewModel = viewModel()
             Button(
                 onClick = {
                     if (state.email.isNotEmpty() && state.password.isNotEmpty()) {
-                    auth.signInWithEmailAndPassword(state.email, state.password)
-                        .addOnCompleteListener {
-                            if (it.isSuccessful) {
-                                authenticateWithBiometrics()
-                            } else {
-                                Toast.makeText(
-                                    context,
-                                    "Error al iniciar sesión",
-                                    Toast.LENGTH_LONG
-                                ).show()
+                        auth.signInWithEmailAndPassword(state.email, state.password)
+                            .addOnCompleteListener {
+                                if (it.isSuccessful) {
+                                    authenticateWithBiometrics()
+                                } else {
+                                    Toast.makeText(
+                                        context,
+                                        "Error al iniciar sesión",
+                                        Toast.LENGTH_LONG
+                                    ).show()
+                                }
                             }
-                        }
                     } else {
-                    Toast.makeText(
-                        context,
-                        "Llena los campos para continuar",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                        Toast.makeText(
+                            context,
+                            "Llena los campos para continuar",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                 },
                 modifier = Modifier

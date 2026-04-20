@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -15,59 +14,83 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.text.input.rememberTextFieldState
-
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.ElevatedButton
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarColors
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.proyecto.Components.CustomBottomBar
-import androidx.compose.runtime.*
-import androidx.compose.material3.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.rememberNavController
+import com.example.proyecto.Components.CustomBottomBar
 import com.example.proyecto.Components.Pokemon
-import com.example.proyecto.Components.pokemonList
-import com.example.proyecto.Navigation.AppScreens
+import com.example.proyecto.R
+import com.example.proyecto.auth
+import com.example.proyecto.database
 
+
+data class PokemonCapturado(
+    val nombre: String = "",
+    val id: Int = 0
+)
 
 @Composable
 fun CollectionScreen(navController: NavController) {
+    val uid = auth.currentUser?.uid
+    var pokemonesCapturados by remember { mutableStateOf<List<PokemonCapturado>>(emptyList()) }
+
+
+    LaunchedEffect(uid) {
+        if (uid != null) {
+            database.getReference("users/$uid/pokemons")
+                .get()
+                .addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        val lista = mutableListOf<PokemonCapturado>()
+                        task.result.children.forEach { snap ->
+                            val nombre = snap.child("nombre").value as? String ?: ""
+                            val id = (snap.child("id").value as? Long)?.toInt() ?: 0
+                            lista.add(PokemonCapturado(nombre, id))
+                        }
+                        pokemonesCapturados = lista
+                    }
+                }
+        }
+    }
+
     Scaffold(
         topBar = { CollectionTopBar() },
-        bottomBar = {
-            CustomBottomBar(navController)
-        }
+        bottomBar = { CustomBottomBar(navController) }
     ) { paddingValues ->
-
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
                 .background(
                     brush = Brush.verticalGradient(
-                        colors = listOf(
-                            Color(0xFF79BAEC),
-                            Color.White
-                        )
+                        colors = listOf(Color(0xFF79BAEC), Color.White)
                     )
                 ),
             horizontalAlignment = Alignment.Start,
@@ -81,23 +104,62 @@ fun CollectionScreen(navController: NavController) {
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF2196F3),
                     contentColor = Color.White
-                )){
-                Text("Vender",
-                    modifier = Modifier.padding(horizontal = 32.dp))
+                )
+            ) {
+                Text("Vender", modifier = Modifier.padding(horizontal = 32.dp))
             }
 
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(3),
-                modifier = Modifier.fillMaxSize().padding(horizontal = 12.dp)
-            ) {
-                items(pokemonList){
-                    pokemon -> PokemonCard(pokemon)
+            if (pokemonesCapturados.isEmpty()) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("No has capturado ningún Pokémon aún", color = Color.Gray)
+                }
+            } else {
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(3),
+                    modifier = Modifier.fillMaxSize().padding(horizontal = 12.dp)
+                ) {
+                    items(pokemonesCapturados) { pokemon ->
+                        PokemonCapturedCard(pokemon)
+                    }
                 }
             }
         }
     }
 }
 
+@Composable
+fun PokemonCapturedCard(pokemon: PokemonCapturado) {
+    val imageRes = when (pokemon.nombre) {
+        "Pichu" -> R.drawable.pichu
+        "Squirtle" -> R.drawable.squirtle
+        "Psyduck" -> R.drawable.psyduck
+        "Rattata" -> R.drawable.rattata
+        "Pidgey" -> R.drawable.pidgey
+        "Nidoran" -> R.drawable.nidoran
+        "Igglybuff" -> R.drawable.igglybuff
+        else -> R.drawable.pichu
+    }
+
+    ElevatedCard(
+        modifier = Modifier.padding(8.dp).fillMaxWidth(),
+        elevation = CardDefaults.elevatedCardElevation(6.dp)
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.padding(12.dp)
+        ) {
+            Image(
+                painter = painterResource(id = imageRes),
+                contentDescription = pokemon.nombre,
+                modifier = Modifier.height(80.dp)
+            )
+            Text(pokemon.nombre, fontWeight = FontWeight.SemiBold)
+        }
+    }
+}
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CollectionTopBar() {
