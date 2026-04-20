@@ -1,5 +1,8 @@
 package com.example.proyecto.screens
 
+import androidx.compose.runtime.LaunchedEffect
+import com.example.proyecto.auth
+import com.example.proyecto.database
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -39,18 +42,38 @@ import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import java.io.File
 import java.util.UUID
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import com.google.firebase.database.DataSnapshot
 
 @OptIn(ExperimentalPermissionsApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun AccountScreen(navController: NavController) {
     val context = LocalContext.current
 
+    val uid = auth.currentUser?.uid
+    var nombre by remember { mutableStateOf(auth.currentUser?.displayName ?: "Usuario") }
+    var correo by remember { mutableStateOf("") }
+    var celular by remember { mutableStateOf("") }
     var imageUri by remember { mutableStateOf<Uri?>(null) }
     var newImageUri by remember { mutableStateOf<Uri?>(null) }
     var showOptions by remember { mutableStateOf(false) }
 
     val cameraPermissionState = rememberPermissionState(android.Manifest.permission.CAMERA)
 
+    LaunchedEffect(uid) {
+        if (uid != null) {
+            database.getReference("users/$uid")
+                .get()
+                .addOnSuccessListener { snapshot ->
+                    nombre = snapshot.child("nombre").value as? String ?: nombre
+                    correo = snapshot.child("correo").value as? String ?: ""
+                    celular = snapshot.child("celular").value as? String ?: ""
+                }
+        }
+    }
 
     val cameraLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.TakePicture()) { success ->
@@ -137,7 +160,7 @@ fun AccountScreen(navController: NavController) {
 
 
             Text(
-                text = auth.currentUser?.displayName ?: "Usuario",
+                text = nombre,
                 fontSize = 30.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.Black,

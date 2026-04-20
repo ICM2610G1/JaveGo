@@ -13,7 +13,8 @@ data class AuthState(
     val phone: String = "",
     val phoneError: String = "",
     val name: String = "",
-    val nameError: String = ""
+    val nameError: String = "",
+    val photoUrl: String = ""
 )
 
 class AuthViewModel : ViewModel() {

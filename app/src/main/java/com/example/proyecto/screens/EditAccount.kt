@@ -39,15 +39,39 @@ import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import java.io.File
 import java.util.UUID
-
+import androidx.compose.runtime.LaunchedEffect
+import com.example.proyecto.auth
+import com.example.proyecto.database
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import com.google.firebase.auth.UserProfileChangeRequest
+import com.google.firebase.database.DataSnapshot
 @OptIn(ExperimentalPermissionsApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun EditProfileScreen(navController: NavController) {
     val context = LocalContext.current
 
-    var nombre by remember { mutableStateOf("Nombre") }
-    var correo by remember { mutableStateOf("correo@javeriana.com") }
-    var celular by remember { mutableStateOf("+57 3204790924") }
+    val uid = auth.currentUser?.uid
+    var nombre by remember { mutableStateOf("") }
+    var correo by remember { mutableStateOf("") }
+    var celular by remember { mutableStateOf("") }
+
+    LaunchedEffect(uid) {
+        if (uid != null) {
+            database.getReference("users/$uid")
+                .get()
+                .addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        val snapshot = task.result
+                        nombre = snapshot.child("nombre").value as? String ?: ""
+                        correo = snapshot.child("correo").value as? String ?: ""
+                        celular = snapshot.child("celular").value as? String ?: ""
+                    }
+                }
+        }
+    }
 
     var imageUri by remember { mutableStateOf<Uri?>(null) }
     var newImageUri by remember { mutableStateOf<Uri?>(null) }
@@ -175,6 +199,35 @@ fun EditProfileScreen(navController: NavController) {
             }
 
             Spacer(modifier = Modifier.weight(1f))
+
+            Button(
+                onClick = {
+                    if (uid != null) {
+                        database.getReference("users/$uid")
+                            .updateChildren(mapOf(
+                                "nombre" to nombre,
+                                "correo" to correo,
+                                "celular" to celular
+                            ))
+                            .addOnSuccessListener {
+                                val profileUpdates = UserProfileChangeRequest.Builder()
+                                    .setDisplayName(nombre).build()
+                                auth.currentUser?.updateProfile(profileUpdates)
+                                navController.popBackStack()
+                            }
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 30.dp, vertical = 5.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF2196F3),
+                    contentColor = Color.White
+                ),
+                shape = RoundedCornerShape(15.dp)
+            ) {
+                Text("Guardar cambios", fontWeight = FontWeight.Bold)
+            }
 
             Button(
                 onClick = { /* Acción eliminar */ },
