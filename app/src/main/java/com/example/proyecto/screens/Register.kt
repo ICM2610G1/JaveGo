@@ -18,10 +18,12 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.proyecto.Components.AuthViewModel
+import com.example.proyecto.Components.JaveGoUser
 import com.example.proyecto.Components.TwoButtonBullet
 import com.example.proyecto.Navigation.AppScreens
 import com.example.proyecto.R
 import com.example.proyecto.auth
+import com.example.proyecto.database
 import com.google.firebase.auth.UserProfileChangeRequest
 
 fun validEmailAddress(email: String): Boolean {
@@ -142,21 +144,26 @@ fun RegisterScreen(navController: NavController, model: AuthViewModel = viewMode
             Button(
                 onClick = {
                     if (validateForm(model, state.email, state.password)) {
-                    auth.createUserWithEmailAndPassword(state.email, state.password)
-                        .addOnCompleteListener {
-                        if (it.isSuccessful) {
-                            val user = auth.currentUser
-                            val profileUpdates = UserProfileChangeRequest.Builder().setDisplayName(state.name).build()
-                            user?.updateProfile(profileUpdates)
-                            navController.navigate(AppScreens.LoginScreen.name)
-                        } else {
-                            Toast.makeText(
-                                context,
-                                "Error al registrar: ${it.exception?.message}",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        }
-                        }
+                        auth.createUserWithEmailAndPassword(state.email, state.password)
+                            .addOnCompleteListener {
+                                if (it.isSuccessful) {
+                                    val user = auth.currentUser
+                                    val profileUpdates = UserProfileChangeRequest.Builder()
+                                        .setDisplayName(state.name).build()
+                                    user?.updateProfile(profileUpdates)
+                                    val uid = auth.currentUser?.uid
+                                    val myRef = database.getReference("users/$uid")
+                                    myRef.setValue(mapOf("celular" to state.phone))
+
+                                    navController.navigate(AppScreens.LoginScreen.name)
+                                } else {
+                                    Toast.makeText(
+                                        context,
+                                        "Error al registrar: ${it.exception?.message}",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                            }
                     }
                 },
                 modifier = Modifier

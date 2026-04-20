@@ -51,10 +51,7 @@ dependencies {
     implementation(libs.androidx.compose.foundation)
     implementation(libs.androidx.foundation)
     implementation(libs.androidx.fragment.ktx)
-    implementation(libs.firebase.auth)
-    implementation(libs.androidx.credentials)
-    implementation(libs.androidx.credentials.play.services.auth)
-    implementation(libs.googleid)
+    implementation(libs.firebase.database)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -71,4 +68,5 @@ dependencies {
     implementation("com.google.android.gms:play-services-location:21.2.0")
     implementation("androidx.biometric:biometric:1.2.0-alpha05")
     implementation("com.google.firebase:firebase-auth-ktx:22.3.1")
+    implementation("com.google.firebase:firebase-database-ktx:20.3.1")
 }

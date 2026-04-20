@@ -12,7 +12,6 @@ import com.example.proyecto.screens.CollectionScreen
 import com.example.proyecto.screens.LoginScreen
 import com.example.proyecto.screens.RegisterScreen
 import com.example.proyecto.screens.EditProfileScreen
-import com.example.proyecto.screens.HomeScreen
 import com.example.proyecto.screens.MapScreen
 import com.example.proyecto.screens.MessagesScreen
 import com.example.proyecto.screens.MissionsScreen
