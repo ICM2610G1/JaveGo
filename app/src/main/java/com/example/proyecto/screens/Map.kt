@@ -52,9 +52,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.Locale
+import coil.compose.rememberAsyncImagePainter
+import com.google.firebase.storage.ktx.storage
 
 data class RocketRadar(val id: Int, val center: LatLng, val radius: Double = 40.0)
-data class PokemonEncounter(val id: Int, val name: String, val position: LatLng, val resId: Int)
+data class PokemonEncounter(val id: Int, val name: String, val position: LatLng, val resId: Int, val imageUrl: String = "")
 
 data class MapState(
     val location: LatLng? = null,
@@ -108,15 +110,43 @@ class MapViewModel : ViewModel() {
 
     private fun spawnPokemonNear(userLoc: LatLng) {
         val rnd = pokemonList.random()
-        _uiState.update {
-            it.copy(
-                activePokemon = PokemonEncounter(
-                    id = (0..1000).random(), name = rnd.first,
-                    position = LatLng(userLoc.latitude + (Math.random() - 0.5) / 2000,
-                        userLoc.longitude + (Math.random() - 0.5) / 2000),
-                    resId = rnd.second
-                ), canSpawn = false
-            )
+        val pokemonName = rnd.first.lowercase()
+
+        val storageRef = com.google.firebase.ktx.Firebase.storage
+            .getReference("pokemon/$pokemonName.png")
+
+        storageRef.downloadUrl.addOnSuccessListener { uri ->
+            _uiState.update {
+                it.copy(
+                    activePokemon = PokemonEncounter(
+                        id = (0..1000).random(),
+                        name = rnd.first,
+                        position = LatLng(
+                            userLoc.latitude + (Math.random() - 0.5) / 2000,
+                            userLoc.longitude + (Math.random() - 0.5) / 2000
+                        ),
+                        resId = rnd.second, // se mantiene como fallback
+                        imageUrl = uri.toString()
+                    ),
+                    canSpawn = false
+                )
+            }
+        }.addOnFailureListener {
+            _uiState.update {
+                it.copy(
+                    activePokemon = PokemonEncounter(
+                        id = (0..1000).random(),
+                        name = rnd.first,
+                        position = LatLng(
+                            userLoc.latitude + (Math.random() - 0.5) / 2000,
+                            userLoc.longitude + (Math.random() - 0.5) / 2000
+                        ),
+                        resId = rnd.second,
+                        imageUrl = ""
+                    ),
+                    canSpawn = false
+                )
+            }
         }
     }
 
@@ -239,7 +269,12 @@ class MapViewModel : ViewModel() {
 fun MapScreen(navController: NavController, viewModel: MapViewModel = viewModel()) {
     val context = LocalContext.current
     val state by viewModel.uiState.collectAsState()
-    val cameraPositionState = rememberCameraPositionState()
+    val cameraPositionState = rememberCameraPositionState {
+        position = com.google.android.gms.maps.model.CameraPosition.fromLatLngZoom(
+            LatLng(4.7110, -74.0721),
+            17f
+        )
+    }
 
     val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {}
     LaunchedEffect(Unit) {
@@ -296,7 +331,7 @@ fun MapScreen(navController: NavController, viewModel: MapViewModel = viewModel(
                 modifier = Modifier.fillMaxSize(),
                 cameraPositionState = cameraPositionState,
                 onMapLongClick = { viewModel.onMapLongClick(context, it) },
-                properties = MapProperties(isMyLocationEnabled = true,
+                properties = MapProperties(isMyLocationEnabled = state.location != null,
                     mapStyleOptions = if (state.luminosity < 50) MapStyleOptions.loadRawResourceStyle(context, R.raw.map_style_dark) else null),
                 uiSettings = MapUiSettings(zoomControlsEnabled = false)
             ) {
@@ -348,8 +383,20 @@ fun MapScreen(navController: NavController, viewModel: MapViewModel = viewModel(
                 Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(0.85f)),
                     contentAlignment = Alignment.Center) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(24.dp)) {
-                        state.activePokemon?.let {
-                            Image(painter = painterResource(it.resId), contentDescription = null, modifier = Modifier.size(220.dp))
+                        state.activePokemon?.let { poke ->
+                            if (poke.imageUrl.isNotEmpty()) {
+                                Image(
+                                    painter = coil.compose.rememberAsyncImagePainter(poke.imageUrl),
+                                    contentDescription = null,
+                                    modifier = Modifier.size(220.dp)
+                                )
+                            } else {
+                                Image(
+                                    painter = painterResource(poke.resId),
+                                    contentDescription = null,
+                                    modifier = Modifier.size(220.dp)
+                                )
+                            }
                         }
                         Text(state.captureMessage, color = Color.White, fontSize = 28.sp, fontWeight = FontWeight.ExtraBold)
 
