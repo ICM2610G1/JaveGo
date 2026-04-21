@@ -159,7 +159,9 @@ fun RegisterScreen(navController: NavController, model: AuthViewModel = viewMode
                                         "nombre" to state.name,
                                         "correo" to state.email,
                                         "celular" to state.phone,
-                                        "photoUrl" to ""
+                                        "photoUrl" to "",
+                                        "estrellas" to 0,
+                                        "nivel" to 1
                                     ))
 
                                     navController.navigate(AppScreens.LoginScreen.name)
