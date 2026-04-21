@@ -138,8 +138,6 @@ fun RegisterScreen(navController: NavController, model: AuthViewModel = viewMode
                 }
             )
 
-            TwoButtonBullet(Modifier.padding(32.dp, 10.dp))
-
             Button(
                 onClick = {
                     if (validateForm(model, state.email, state.password)) {
